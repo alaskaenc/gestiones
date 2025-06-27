@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ALASKA FASHION</title> 
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- Enlace al archivo de estilos CSS externo -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-gray-100">
+    <div class="container">
+        <h1 class="text-4xl font-extrabold text-center text-gray-900 mb-8">
+            <span class="bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-purple-600">
+                ALASKA FASHION /// GESTIONES 
+            </span>
+        </h1>
+
+        <div class="flex flex-wrap justify-center sm:justify-start gap-4 mb-8 p-4 bg-blue-50 rounded-lg shadow-inner">
+            <button class="tab-button active" data-tab="cotizaciones">Cotizaciones</button>
+            <button class="tab-button" data-tab="cargar-boleta">Cargar Boleta</button>
+            <button class="tab-button" data-tab="listado-boletas">Boletas</button>
+            <button class="tab-button" data-tab="resumen-vendedor">Resumen por Vendedor</button>
+            <button class="tab-button" data-tab="resumen-detallado-moneda">Resumen Detallado</button>
+            <button class="tab-button" data-tab="gestionar-vendedores">Vendedores</button>
+        </div>
+
+        <div id="cotizaciones" class="tab-content active">
+            <h2 class="text-3xl font-extrabold text-blue-800 mb-6 text-center">Configurar Cotizaciones</h2>
+            <div class="bg-white p-6 rounded-lg shadow-md mb-6">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    <div>
+                        <label for="usdToArs" class="block text-gray-700 text-sm font-bold mb-2">USD a ARS:</label>
+                        <input type="number" id="usdToArs" step="0.01" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                    </div>
+                    <div>
+                        <label for="pygToArs" class="block text-gray-700 text-sm font-bold mb-2">PYG a ARS (cuántos PYG por 1 ARS):</label>
+                        <input type="number" id="pygToArs" step="0.01" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                    </div>
+                    <div>
+                        <label for="brlToArs" class="block text-gray-700 text-sm font-bold mb-2">BRL a ARS:</label>
+                        <input type="number" id="brlToArs" step="0.01" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                    </div>
+                </div>
+                <button id="saveRates" class="btn primary w-full">Guardar Cotizaciones</button>
+            </div>
+
+            <div class="bg-white p-6 rounded-lg shadow-md mb-6">
+                <h3 class="text-2xl font-bold text-gray-800 mb-4">Cotizaciones Actuales:</h3>
+                <p class="text-lg mb-2"><span class="font-semibold text-blue-600">USD a ARS:</span> <span id="currentUsdRate">Cargando...</span></p>
+                <p class="text-lg mb-2"><span class="font-semibold text-blue-600">PYG a ARS:</span> <span id="currentPygRate">Cargando...</span></p>
+                <p class="text-lg"><span class="font-semibold text-blue-600">BRL a ARS:</span> <span id="currentBrlRate">Cargando...</span></p>
+            </div>
+
+            <div class="bg-white p-6 rounded-lg shadow-md">
+                <h3 class="text-2xl font-bold text-gray-800 mb-4">Exportar / Importar Datos:</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <button id="exportAllData" class="btn secondary">Exportar Todos los Datos (JSON)</button>
+                    <div>
+                        <input type="file" id="importFileInput" accept=".json" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer">
+                        <button id="importData" class="btn primary mt-2 w-full">Importar Datos (JSON)</button>
+                    </div>
+                </div>
+                <p class="text-sm text-gray-500 mt-4">La importación sobrescribirá los datos existentes. ¡Usa con precaución!</p>
+            </div>
+        </div>
+
+        <div id="cargar-boleta" class="tab-content hidden p-6 bg-gray-100 rounded-lg shadow-inner">
+            <h2 class="text-3xl font-extrabold text-blue-800 mb-6 text-center">Cargar Nueva Boleta</h2>
+            <div class="bg-white p-6 rounded-lg shadow-md mb-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label for="saleDateInput" class="block text-gray-700 text-sm font-bold mb-2">Fecha de Venta:</label>
+                        <input type="date" id="saleDateInput" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                    </div>
+                    <div>
+                        <label for="sellerName" class="block text-gray-700 text-sm font-bold mb-2">Nombre del Vendedor:</label>
+                        <input type="text" id="sellerName" list="sellerNames" placeholder="Selecciona o escribe un vendedor" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                        <datalist id="sellerNames"></datalist>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label for="saleAmount" class="block text-gray-700 text-sm font-bold mb-2">Monto de Venta (ingresa montos con su moneda, ej: 100 USD, 500000 PYG. Separa con comas o saltos de línea para múltiples boletas):</label>
+                    <textarea id="saleAmount" rows="4" placeholder="Ej: 1000 ARS, 50 USD, 500000 PYG" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"></textarea>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label for="saleCurrency" class="block text-gray-700 text-sm font-bold mb-2">Moneda por Defecto:</label>
+                        <select id="saleCurrency" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                            <option value="ARS">ARS - Pesos Argentinos</option>
+                            <option value="USD">USD - Dólares Americanos</option>
+                            <option value="PYG">PYG - Guaraníes Paraguayos</option>
+                            <option value="BRL">BRL - Reales Brasileños</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="paymentMethod" class="block text-gray-700 text-sm font-bold mb-2">Método de Pago:</label>
+                        <select id="paymentMethod" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                            <option value="Efectivo">Efectivo</option>
+                            <option value="Transf">Transferencia</option>
+                            <option value="Tarjeta">Tarjeta</option>
+                            <option value="Usdt">USDT</option>
+                            <option value="Yasin">Yasin</option>
+                            <option value="Mercado Pago">Mercado Pago</option>
+                            <option value="Otros">Otros</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="mb-4 flex items-center space-x-3">
+                    <input type="checkbox" id="enableCommissionEdit" class="form-checkbox h-4 w-4 text-blue-600 rounded">
+                    <label for="enableCommissionEdit" class="text-gray-700 text-sm font-bold">Activar Edición de Tasa de Comisión</label>
+                </div>
+                <div class="mb-4">
+                    <label for="commissionRate" class="block text-gray-700 text-sm font-bold mb-2">Tasa de Comisión (%):</label>
+                    <input type="number" id="commissionRate" value="0.03" step="0.01" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" disabled>
+                </div>
+
+                <div class="mb-6 flex items-center space-x-3">
+                    <input type="checkbox" id="isWholesale" class="form-checkbox h-4 w-4 text-blue-600 rounded">
+                    <label for="isWholesale" class="text-gray-700 text-sm font-bold">Venta Mayorista (con monto de pase)</label>
+                </div>
+
+                <div id="paseAmountGroup" class="mb-4 hidden">
+                    <label for="paseAmount" class="block text-gray-700 text-sm font-bold mb-2">Monto de Pase:</label>
+                    <input type="number" id="paseAmount" value="0" step="0.01" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                </div>
+
+                <div id="paseCurrencyGroup" class="mb-6 hidden">
+                    <label for="paseCurrency" class="block text-gray-700 text-sm font-bold mb-2">Moneda del Pase:</label>
+                    <select id="paseCurrency" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                        <option value="USD">USD - Dólares Americanos</option>
+                        <option value="PYG">PYG - Guaraníes Paraguayos</option>
+                        <option value="BRL">BRL - Reales Brasileños</option>
+                        <option value="ARS">ARS - Pesos Argentinos</option>
+                    </select>
+                </div>
+
+                <div class="flex flex-col sm:flex-row gap-4">
+                    <button id="addSale" class="btn primary w-full sm:w-1/2">Agregar Boleta</button>
+                    <button id="cancelEditBtn" class="btn secondary w-full sm:w-1/2 hidden">Cancelar Edición</button>
+                </div>
+            </div>
+
+            <div id="dailySummaryPreview" class="bg-white p-6 rounded-lg shadow-md">
+                <p class="text-gray-500">Completa la fecha y el vendedor para ver el resumen del día.</p>
+            </div>
+        </div>
+        
+        <div id="listado-boletas" class="tab-content hidden">
+            <h2 class="text-3xl font-extrabold text-blue-800 mb-6 text-center">Listado de Boletas</h2>
+            
+            <div class="bg-white p-6 rounded-lg shadow-md mb-6">
+                <div class="mb-4">
+                    <label for="filterSeller" class="block text-gray-700 text-sm font-bold mb-2">Filtrar por Vendedor:</label>
+                    <input type="text" id="filterSeller" placeholder="Introduce el nombre del vendedor" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                </div>
+                <button id="resetFilter" class="btn secondary w-full md:w-auto">Reiniciar Filtro de Vendedor</button>
+            </div>
+
+            <!-- NUEVOS FILTROS DE FECHA PARA LISTADO DE BOLETAS -->
+            <div class="flex items-end gap-4 mb-6 p-4 bg-gray-100 rounded-lg shadow-inner">
+                <div class="flex-grow">
+                    <label for="listSalesStartDateFilter" class="block text-gray-700 text-sm font-bold mb-2">Filtrar por Fecha Inicio:</label>
+                    <input type="date" id="listSalesStartDateFilter" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                </div>
+                <div class="flex-grow">
+                    <label for="listSalesEndDateFilter" class="block text-gray-700 text-sm font-bold mb-2">Filtrar por Fecha Fin:</label>
+                    <input type="date" id="listSalesEndDateFilter" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                </div>
+                <button id="showAllListSalesBtn" class="btn primary px-4 py-2 mt-auto">Mostrar Todas las Boletas</button>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table id="salesTable" class="min-w-full divide-y divide-gray-200">
+                    <thead>
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Vendedor</th>
+                            <th>Monto Original</th>
+                            <th>Moneda</th>
+                            <th>Método de Pago</th>
+                            <th>Monto Pase</th>
+                            <th>Monto Neto ($)</th>
+                            <th>Tasa Comisión (%)</th>
+                            <th>Comisión Bruta ($)</th>
+                            <th>Tasa Depósito (%)</th>
+                            <th>Depósito Comisión ($)</th>
+                            <th>Comisión Neta ($)</th>
+                            <th>Tipo</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Las filas de ventas se insertarán aquí por JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="flex flex-wrap justify-between items-center mt-6 p-4 bg-blue-100 border border-blue-300 rounded-lg text-blue-800 font-bold text-lg">
+                <span>Venta Neta Total ($): <span id="totalSalesArs">0.00</span></span>
+                <span>Comisión Bruta Total ($): <span id="totalCommissionsArs">0.00</span></span>
+                <span>Comisión Depósito Total ($): <span id="totalDepositCommissionsArs">0.00</span></span>
+            </div>
+            
+            <div class="mt-6 flex justify-center">
+                <button id="deleteAllSales" class="btn danger">Limpiar Vista de Boletas</button>
+            </div>
+        </div>
+
+        <div id="resumen-vendedor" class="tab-content hidden">
+            <h2 class="text-3xl font-extrabold text-blue-800 mb-6 text-center">Resumen por Vendedor</h2>
+            
+            <div class="bg-white p-6 rounded-lg shadow-md mb-6">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                    <div>
+                        <label for="summarySellerFilter" class="block text-gray-700 text-sm font-bold mb-2">Filtrar por Vendedor:</label>
+                        <input type="text" id="summarySellerFilter" list="sellerNamesSummary" placeholder="Introduce el nombre del vendedor" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                        <datalist id="sellerNamesSummary"></datalist>
+                    </div>
+                    <div>
+                        <label for="summaryStartDateFilter" class="block text-gray-700 text-sm font-bold mb-2">Fecha Inicio:</label>
+                        <input type="date" id="summaryStartDateFilter" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                    </div>
+                    <div>
+                        <label for="summaryEndDateFilter" class="block text-gray-700 text-sm font-bold mb-2">Fecha Fin:</label>
+                        <input type="date" id="summaryEndDateFilter" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                    </div>
+                </div>
+                <div class="flex justify-end">
+                    <button id="summaryResetFiltersBtn" class="btn secondary">Reiniciar Filtros</button>
+                </div>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table id="summaryTable" class="min-w-full divide-y divide-gray-200">
+                    <thead>
+                        <tr>
+                            <!-- Los encabezados se generarán dinámicamente por JavaScript -->
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Las filas de resumen se insertarán aquí por JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="mt-6 flex justify-end">
+                <button id="exportSummaryTable" class="btn primary">Exportar Resumen a Excel</button>
+            </div>
+        </div>
+
+        <div id="resumen-detallado-moneda" class="tab-content hidden">
+            <h2 class="text-3xl font-extrabold text-blue-800 mb-6 text-center">Resumen Detallado por Vendedor y Moneda</h2>
+            
+            <div class="bg-white p-6 rounded-lg shadow-md mb-6">
+                <label for="filterDetailedSeller" class="block text-gray-700 text-sm font-bold mb-2">Filtrar Vendedor:</label>
+                <input type="text" id="filterDetailedSeller" placeholder="Filtrar por nombre de vendedor" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mb-4">
+                
+                <!-- NUEVOS FILTROS DE FECHA PARA RESUMEN DETALLADO -->
+                <div class="flex items-end gap-4 mb-6 p-4 bg-gray-100 rounded-lg shadow-inner">
+                    <div class="flex-grow">
+                        <label for="detailedStartDateFilter" class="block text-gray-700 text-sm font-bold mb-2">Filtrar por Fecha Inicio:</label>
+                        <input type="date" id="detailedStartDateFilter" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                    </div>
+                    <div class="flex-grow">
+                        <label for="detailedEndDateFilter" class="block text-gray-700 text-sm font-bold mb-2">Filtrar por Fecha Fin:</label>
+                        <input type="date" id="detailedEndDateFilter" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                    </div>
+                    <button id="showAllDetailedSalesBtn" class="btn primary px-4 py-2 mt-auto">Mostrar Todos los Detalles</button>
+                </div>
+                <button id="exportDetailedSummaryBtn" class="btn primary w-full md:w-auto">Exportar Resumen Detallado a Excel</button>
+            </div>
+
+            <div id="detailedSummaryContent" class="space-y-8">
+                <!-- El resumen detallado se insertará aquí por JavaScript -->
+            </div>
+        </div>
+
+        <div id="gestionar-vendedores" class="tab-content hidden">
+            <h2 class="text-3xl font-extrabold text-blue-800 mb-6 text-center">Gestionar Vendedores</h2>
+            
+            <div class="bg-white p-6 rounded-lg shadow-md mb-6">
+                <div class="mb-4">
+                    <label for="newSellerName" class="block text-gray-700 text-sm font-bold mb-2">Nuevo Nombre de Vendedor:</label>
+                    <input type="text" id="newSellerName" placeholder="Escribe el nombre del nuevo vendedor" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                </div>
+                <button id="addSeller" class="btn primary w-full">Añadir Vendedor</button>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table id="sellersTable" class="min-w-full divide-y divide-gray-200">
+                    <thead>
+                        <tr>
+                            <th>Nombre del Vendedor</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="sellersTableBody">
+                        <!-- Los vendedores se insertarán aquí por JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Modal for Confirmations -->
+    <div id="customModal" class="custom-modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <p id="modalMessage" class="text-lg font-medium text-gray-800 mb-6"></p>
+            <div id="modalButtons" class="modal-buttons">
+                <!-- Buttons will be injected by JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- Table2Excel Library for Export -->
+    <script src="https://unpkg.com/table2excel@1.0.4/dist/table2excel.js"></script>
+    <!-- Your application's JavaScript -->
+    <script type="module" src="script.js"></script>
+</body>
+</html>
