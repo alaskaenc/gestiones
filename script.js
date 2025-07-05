@@ -1,6 +1,6 @@
 // script.js
 // Define la URL base de tu API de Node.js
-const API_BASE_URL = 'http://localhost:3000/api'; 
+const API_BASE_URL = 'http://localhost:3000/api';
 
 document.addEventListener('DOMContentLoaded', async () => {
     // --- Variables Globales y Constantes ---
@@ -22,7 +22,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Pestaña de Cotizaciones
     const usdToArsInput = document.getElementById('usdToArs');
-    const pygToArsInput = document.getElementById('pygToArs'); 
+    const pygToArsInput = document.getElementById('pygToArs');
     const brlToArsInput = document.getElementById('brlToArs');
     const saveRatesBtn = document.getElementById('saveRates');
     const currentUsdRateSpan = document.getElementById('currentUsdRate');
@@ -31,7 +31,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Nuevos botones para Exportar/Importar Datos
     const exportAllDataBtn = document.getElementById('exportAllData');
     const importFileInput = document.getElementById('importFileInput');
-    const importDataBtn = document.getElementById('importData');
+    const importDataBtn = document.getElementById('importData'); // Corrección aquí: se eliminó la reasignación de 'document'
 
 
     // Pestaña Cargar Boleta
@@ -43,12 +43,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     const paymentMethodSelect = document.getElementById('paymentMethod');
     const commissionRateInput = document.getElementById('commissionRate');
     const enableCommissionEditCheckbox = document.getElementById('enableCommissionEdit'); // Checkbox para activar/desactivar edición de comisión
-    
+
     const isWholesaleCheckbox = document.getElementById('isWholesale');
     const paseAmountGroup = document.getElementById('paseAmountGroup'); // Contenedor del monto de pase
     const paseAmountInput = document.getElementById('paseAmount');
-    const paseCurrencyGroup = document.getElementById('paseCurrencyGroup'); // NUEVO: Contenedor de la moneda de pase
-    const paseCurrencySelect = document.getElementById('paseCurrency'); // NUEVO: Selector de moneda de pase
+    const paseCurrencyGroup = document.getElementById('paseCurrencyGroup'); // Contenedor de la moneda de pase
+    const paseCurrencySelect = document.getElementById('paseCurrency'); // Selector de moneda de pase
+
+    // NOTA: Se eliminan los elementos y lógica relacionados con 'Pago Confirmado' aquí.
 
     const addSaleBtn = document.getElementById('addSale');
     const cancelEditBtn = document.getElementById('cancelEditBtn'); // Botón para cancelar la edición
@@ -72,6 +74,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     const listSalesStartDateFilter = document.getElementById('listSalesStartDateFilter');
     const listSalesEndDateFilter = document.getElementById('listSalesEndDateFilter');
     const showAllListSalesBtn = document.getElementById('showAllListSalesBtn');
+
+    // NOTA: Se elimina el filtro para estado de pago.
+    // const paymentStatusFilter = document.getElementById('paymentStatusFilter');
 
     // Pestaña Resumen por Vendedor
     const summaryTableBody = document.querySelector('#summaryTable tbody');
@@ -117,7 +122,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             // Excluir combinaciones específicas
             if (!(
                 (curr === 'BRL' && (pm === 'Transf' || pm === 'Tarjeta' || pm === 'Otros' || pm === 'Usdt' || pm === 'Yasin' || pm === 'Mercado Pago')) ||
-                (pm === 'Yasin' && curr === 'USD') || 
+                (pm === 'Yasin' && curr === 'USD') ||
                 (pm === 'Mercado Pago' && curr === 'PYG') ||
                 (pm === 'Mercado Pago' && curr === 'USD') ||
                 (pm === 'Yasin' && curr === 'ARS') ||
@@ -139,11 +144,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     // --- Funciones de Utilidad (ahora interactuando con la API) ---
     async function fetchData(endpoint) {
         try {
+            console.log(`Intentando cargar datos de: ${API_BASE_URL}${endpoint}`);
             const response = await fetch(`${API_BASE_URL}${endpoint}`);
             if (!response.ok) {
+                console.error(`Error HTTP cargando ${endpoint}: estado ${response.status}`);
                 throw new Error(`Error HTTP! estado: ${response.status}`);
             }
-            return await response.json();
+            const data = await response.json();
+            console.log(`Datos cargados de ${endpoint}:`, data);
+            return data;
         } catch (error) {
             console.error(`Error cargando datos de ${endpoint}:`, error);
             showToast(`Error cargando datos de ${endpoint}. Revisa la consola y asegúrate de que el servidor esté funcionando.`, 'error');
@@ -153,6 +162,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     async function postData(endpoint, data) {
         try {
+            console.log(`Intentando enviar datos a: ${API_BASE_URL}${endpoint} con payload:`, data);
             const response = await fetch(`${API_BASE_URL}${endpoint}`, {
                 method: 'POST',
                 headers: {
@@ -162,18 +172,21 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
             if (!response.ok) {
                 const errorData = await response.json();
+                console.error(`Error HTTP enviando a ${endpoint}: estado ${response.status}, mensaje: ${errorData.error || 'Error desconocido'}`);
                 throw new Error(`Error HTTP! estado: ${response.status}, mensaje: ${errorData.error || 'Error desconocido'}`);
             }
-            return await response.json();
+            const result = await response.json();
+            console.log(`Datos enviados a ${endpoint} con éxito:`, result);
+            return result;
         } catch (error) {
-            console.error(`Error enviando datos a ${endpoint}:`, error);
-            showToast(`Error guardando datos en ${endpoint}: ${error.message}`, 'error');
+            console.error(`Error guardando datos en ${endpoint}: ${error.message}`, 'error');
             return null;
         }
     }
 
     async function putData(endpoint, data) {
         try {
+            console.log(`Intentando actualizar datos en: ${API_BASE_URL}${endpoint} con payload:`, data);
             const response = await fetch(`${API_BASE_URL}${endpoint}`, {
                 method: 'PUT',
                 headers: {
@@ -183,9 +196,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
             if (!response.ok) {
                 const errorData = await response.json();
+                console.error(`Error HTTP actualizando ${endpoint}: estado ${response.status}, mensaje: ${errorData.message || 'Error desconocido'}`);
                 throw new Error(`Error HTTP! estado: ${response.status}, mensaje: ${errorData.message || 'Error desconocido'}`);
             }
-            return await response.json();
+            const result = await response.json();
+            console.log(`Datos actualizados en ${endpoint} con éxito:`, result);
+            return result;
         } catch (error) {
             console.error(`Error actualizando ${endpoint}:`, error);
             showToast(`Error actualizando datos en ${endpoint}: ${error.message}`, 'error');
@@ -195,14 +211,18 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     async function deleteData(endpoint) {
         try {
+            console.log(`Intentando eliminar datos de: ${API_BASE_URL}${endpoint}`);
             const response = await fetch(`${API_BASE_URL}${endpoint}`, {
                 method: 'DELETE',
             });
             if (!response.ok) {
                 const errorData = await response.json();
+                console.error(`Error HTTP eliminando de ${endpoint}: estado ${response.status}, mensaje: ${errorData.message || 'Error desconocido'}`);
                 throw new Error(`Error HTTP! estado: ${response.status}, mensaje: ${errorData.message || 'Error desconocido'}`);
             }
-            return await response.json();
+            const result = await response.json();
+            console.log(`Datos eliminados de ${endpoint} con éxito:`, result);
+            return result;
         } catch (error) {
             console.error(`Error eliminando de ${endpoint}:`, error);
             showToast(`Error eliminando datos de ${endpoint}: ${error.message}`, 'error');
@@ -219,7 +239,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             maximumFractionDigits: 2,
             currencyDisplay: 'symbol'
         };
-        
+
         let locale;
 
         if (currency === 'PYG') {
@@ -238,9 +258,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             options.currencyDisplay = 'symbol';
         } else {
             locale = 'en-US';
-            options.currencyDisplay = 'symbol'; 
+            options.currencyDisplay = 'symbol';
         }
-        
+
         return new Intl.NumberFormat(locale, options).format(amount);
     }
 
@@ -249,7 +269,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (value === null || value === undefined || isNaN(value) || parseFloat(value) === 0) {
             return '';
         }
-        
+
         const numericValue = parseFloat(value);
         return numericValue.toFixed(decimalPlaces);
     }
@@ -259,6 +279,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             case 'USD':
                 return amount * exchangeRates.usdToArs;
             case 'PYG':
+                // Nota: PYG es / exchangeRates, asegurando que se obtenga el equivalente en ARS
                 return amount / exchangeRates.pygToArs;
             case 'BRL':
                 return amount * exchangeRates.brlToArs;
@@ -298,6 +319,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 return amountInArs / exchangeRates.usdToArs;
             case 'PYG':
                 return amountInArs * exchangeRates.pygToArs;
+                break;
             case 'BRL':
                 return amountInArs / exchangeRates.brlToArs;
             case 'ARS':
@@ -457,10 +479,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             const saleAmountsRaw = saleAmountInput.value.trim();
             const defaultCurrency = saleCurrencySelect.value;
             const paymentMethod = paymentMethodSelect.value;
-            const commissionRate = parseFloat(commissionRateInput.value) / 10; 
+            const commissionRate = parseFloat(commissionRateInput.value) / 10;
             const commissionDepositRate = 0.06;
             const isWholesale = isWholesaleCheckbox.checked;
-            
+
             let paseAmount = 0;
             let paseCurrency = 'ARS';
 
@@ -478,9 +500,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                 return;
             }
 
-            const currencyRegex = /(\d+(?:\.\d+)?)\s*([a-zA-Z]{3})?/i; 
+            const currencyRegex = /(\d+(?:\.\d+)?)\s*([a-zA-Z]{3})?/i;
             const salesEntries = saleAmountsRaw.split(/[\n,]+/).map(s => s.trim()).filter(s => s !== '');
-            
+
             if (salesEntries.length === 0) {
                 showToast('Por favor, ingresa al menos un monto de venta válido.', 'error');
                 return;
@@ -517,7 +539,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         }
                         actualPaseAmountInSaleCurrency = convertAmount(paseAmount, paseCurrency, currency);
                     }
-                    
+
                     const netAmountVal = amount - actualPaseAmountInSaleCurrency;
                     const netAmountArsVal = convertToArs(netAmountVal, currency);
                     const grossCommissionArsVal = netAmountArsVal * commissionRate;
@@ -527,19 +549,20 @@ document.addEventListener('DOMContentLoaded', async () => {
                     const newSale = {
                         date: saleDate,
                         seller: sellerName,
-                        originalAmount: amount,
+                        originalAmount: amount, // Se mantiene el monto original
                         currency: currency,
                         paymentMethod: paymentMethod,
                         paseAmount: paseAmount,
                         paseCurrency: paseCurrency,
-                        netAmount: netAmountVal,
-                        netAmountArs: parseFloat(netAmountArsVal.toFixed(2)), 
+                        netAmount: netAmountVal, // Monto neto (original - pase) en la moneda de venta
+                        netAmountArs: parseFloat(netAmountArsVal.toFixed(2)), // Monto neto (original - pase) en ARS
                         commissionRate: commissionRate,
                         grossCommissionArs: parseFloat(grossCommissionArsVal.toFixed(2)),
                         commissionDepositRate: parseFloat(commissionDepositArsVal.toFixed(2)) > 0 ? commissionDepositRate : 0,
                         commissionDepositArs: parseFloat(commissionDepositArsVal.toFixed(2)),
                         commissionArs: parseFloat(finalCommissionArsVal.toFixed(2)),
                         type: isWholesale ? 'Mayorista' : 'Minorista'
+                        // isPaymentConfirmed se ha eliminado
                     };
 
                     const result = await postData('/sales', newSale);
@@ -558,9 +581,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
 
             await loadAllData(); // Recargar todos los datos de la API después de agregar
-            currentPage = 1; 
-            renderSalesTable(filterSellerInput.value, currentPage, itemsPerPage, listSalesStartDateFilter.value, listSalesEndDateFilter.value); // Pasa filtros de fecha
-            renderSummaryTable(summaryStartDateFilter.value, summaryEndDateFilter.value, summarySellerFilter.value); 
+            currentPage = 1;
+            // Se elimina el argumento `paymentStatusFilter.value` ya que la funcionalidad fue removida.
+            renderSalesTable(filterSellerInput.value, currentPage, itemsPerPage, listSalesStartDateFilter.value, listSalesEndDateFilter.value);
+            renderSummaryTable(summaryStartDateFilter.value, summaryEndDateFilter.value, summarySellerFilter.value);
             renderDetailedSummary(filterDetailedSellerInput.value, detailedStartDateFilter.value, detailedEndDateFilter.value); // Pasa filtros de fecha
             updateDailySummaryPreview();
             resetForm();
@@ -597,7 +621,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             const commissionRate = parseFloat(commissionRateInput.value) / 10;
             const commissionDepositRate = 0.06;
             const isWholesale = isWholesaleCheckbox.checked;
-            
+
             let paseAmount = 0;
             let paseCurrency = 'ARS';
 
@@ -651,13 +675,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             let actualPaseAmountInSaleCurrency = 0;
             if (isWholesale && paseAmount > 0) {
-                 if (!allowedCurrencies.includes(paseCurrency)) {
+                if (!allowedCurrencies.includes(paseCurrency)) {
                     showToast(`Moneda de pase inválida "${paseCurrency}".`, 'error');
                     return;
                 }
                 actualPaseAmountInSaleCurrency = convertAmount(paseAmount, paseCurrency, currency);
             }
-            
+
             const netAmountVal = amount - actualPaseAmountInSaleCurrency;
             const netAmountArsVal = convertToArs(netAmountVal, currency);
             const grossCommissionArsVal = netAmountArsVal * commissionRate;
@@ -668,19 +692,20 @@ document.addEventListener('DOMContentLoaded', async () => {
                 ...sales[saleToUpdateIndex], // Mantener el ID original
                 date: saleDate,
                 seller: sellerName,
-                originalAmount: amount,
+                originalAmount: amount, // Se mantiene el monto original
                 currency: currency,
                 paymentMethod: paymentMethod,
                 paseAmount: paseAmount,
                 paseCurrency: paseCurrency,
-                netAmount: netAmountVal,
-                netAmountArs: parseFloat(netAmountArsVal.toFixed(2)),
+                netAmount: netAmountVal, // Monto neto (original - pase) en la moneda de venta
+                netAmountArs: parseFloat(netAmountArsVal.toFixed(2)), // Monto neto (original - pase) en ARS
                 commissionRate: commissionRate,
                 grossCommissionArs: parseFloat(grossCommissionArsVal.toFixed(2)),
                 commissionDepositRate: parseFloat(commissionDepositArsVal.toFixed(2)) > 0 ? commissionDepositRate : 0,
                 commissionDepositArs: parseFloat(commissionDepositArsVal.toFixed(2)),
                 commissionArs: parseFloat(finalCommissionArsVal.toFixed(2)),
                 type: isWholesale ? 'Mayorista' : 'Minorista'
+                // isPaymentConfirmed se ha eliminado
             };
 
             const result = await putData(`/sales/${editingSaleId}`, updatedSale);
@@ -750,6 +775,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         console.error('Error: enableCommissionEditCheckbox o commissionRateInput son null.');
     }
 
+    // NOTA: Se elimina la lógica de control del checkbox de Pago Confirmado basada en el Método de Pago.
+
     // Función para restablecer el formulario y controlar el estado del botón "Agregar/Actualizar Boleta"
     function resetForm(fullReset = false) {
         if (fullReset) {
@@ -760,16 +787,18 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (saleDateInput) saleDateInput.value = `${year}-${month}-${day}`;
             if (sellerNameInput) sellerNameInput.value = '';
         }
-        
+
         if (saleAmountInput) saleAmountInput.value = '';
         if (saleCurrencySelect) saleCurrencySelect.value = 'ARS';
         if (paymentMethodSelect) paymentMethodSelect.value = 'Efectivo';
         
+        // NOTA: Se elimina el dispatchEvent para paymentMethodSelect ya no es necesario.
+
         // Reinicia el checkbox y el estado del input de comisión
         if (enableCommissionEditCheckbox) enableCommissionEditCheckbox.checked = false;
         if (commissionRateInput) {
-            commissionRateInput.value = 0.03; // Siempre restablece al valor por defecto
-            commissionRateInput.disabled = true; // Siempre deshabilita al reiniciar el formulario
+            commissionRateInput.disabled = true; // Deshabilitado por defecto
+            commissionRateInput.value = 0.03;   // Valor por defecto
         }
 
         // Reinicia los campos de pase y los oculta
@@ -825,6 +854,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     (Neto <span class="font-semibold text-gray-800">$</span>: <span class="font-semibold">${formatCurrency(sale.netAmountArs, 'ARS')}</span>)<br>
                     Comisión Neta <span class="font-semibold text-green-600">$</span>: <span class="font-semibold text-green-600">${formatCurrency(sale.commissionArs, 'ARS')}</span>
                     <span class="text-sm text-gray-600"> (${sale.type}, ${sale.paymentMethod})</span>
+                    <!-- isPaymentConfirmed ha sido eliminado del preview -->
                 </li>
             `;
             totalAmountArs += sale.netAmountArs;
@@ -852,6 +882,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // --- Listado de Boletas ---
+    // Se elimina el argumento `paymentStatus` y su lógica de filtrado de esta función.
     function renderSalesTable(filterSeller = '', page = currentPage, items = itemsPerPage, startDate = '', endDate = '') {
         if (!salesTableBody) {
             console.error('Error: salesTableBody es null. No se puede renderizar la tabla de ventas.');
@@ -872,6 +903,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
             const matchesSeller = (sale.seller || '').toLowerCase().includes(filterSeller.toLowerCase());
             const dateInRange = (!start || saleDate >= start) && (!end || saleDate < end);
+
+            // NOTA: Se elimina el filtrado por estado de pago aquí.
             return matchesSeller && dateInRange;
         }).sort((a, b) => {
             const dateA = (a.date && !isNaN(new Date(a.date))) ? new Date(a.date) : new Date('1900-01-01');
@@ -887,13 +920,37 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         const salesToDisplay = filteredSales.slice(startIndex, endIndex);
 
+        // Remover el encabezado de "Estado Pago" y ajustar "Acciones"
+        const currentSalesHeaderRow = salesTableHeader.querySelector('tr');
+        if (currentSalesHeaderRow) {
+            const paymentStatusHeader = currentSalesHeaderRow.querySelector('th.payment-status-header');
+            if (paymentStatusHeader) {
+                paymentStatusHeader.remove();
+            }
+            // Asegurarse de que 'Acciones' sea el último encabezado si fue insertado antes
+            let actionsHeader = currentSalesHeaderRow.querySelector('th.actions-header');
+            if (actionsHeader && actionsHeader !== currentSalesHeaderRow.lastChild) {
+                currentSalesHeaderRow.appendChild(actionsHeader);
+            }
+            // Si actionsHeader no tenía la clase 'actions-header' por alguna razón en versiones anteriores,
+            // esta parte lo añade para futuras referencias:
+            if (!actionsHeader) { // Si aún no existe el encabezado de Acciones (lo que sería raro aquí)
+                actionsHeader = document.createElement('th');
+                actionsHeader.textContent = 'Acciones';
+                actionsHeader.classList.add('px-4', 'py-2', 'border', 'border-gray-300', 'bg-gray-200', 'text-gray-700', 'text-sm', 'font-semibold', 'rounded-md', 'actions-header');
+                currentSalesHeaderRow.appendChild(actionsHeader);
+            }
+        }
+
+
         if (salesToDisplay.length === 0 && totalItems > 0) { // Si no hay elementos en la página actual pero sí en total
             currentPage = 1; // Restablecer a la primera página
             renderSalesTable(filterSeller, currentPage, itemsPerPage, startDate, endDate); // Volver a renderizar la primera página
             return;
         } else if (salesToDisplay.length === 0 && totalItems === 0) { // Si no hay elementos en absoluto
             const row = salesTableBody.insertRow();
-            row.innerHTML = '<td colspan="14" style="text-align: center;">No hay boletas para mostrar.</td>'; // Colspan ajustado a 14
+            // Colspan ajustado a 14 (eliminado el estado de pago)
+            row.innerHTML = '<td colspan="14" style="text-align: center;">No hay boletas para mostrar.</td>';
             if (totalSalesArsSpan) totalSalesArsSpan.textContent = formatCurrency(0);
             if (totalCommissionsArsSpan) totalCommissionsArsSpan.textContent = formatCurrency(0);
             if (totalDepositCommissionsArsSpan) totalDepositCommissionsArsSpan.textContent = formatCurrency(0);
@@ -902,7 +959,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         salesToDisplay.forEach(sale => {
-            const row = salesTableBody.insertRow(); 
+            const row = salesTableBody.insertRow();
+
             const displayDate = (sale.date === '' || sale.date === 0 || isNaN(new Date(sale.date))) ? '' : sale.date;
             row.insertCell().textContent = displayDate;
 
@@ -919,6 +977,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             row.insertCell().textContent = formatCurrency(sale.commissionArs, 'ARS');
             row.insertCell().textContent = sale.type;
 
+            // NOTA: Se elimina la CELDA para Estado del Pago.
+
             const actionsCell = row.insertCell();
             actionsCell.classList.add('flex', 'gap-2', 'items-center', 'justify-center');
 
@@ -933,6 +993,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             deleteBtn.classList.add('btn', 'danger', 'text-sm', 'px-2', 'py-1');
             deleteBtn.onclick = () => deleteSale(sale.id);
             actionsCell.appendChild(deleteBtn);
+
+            // NOTA: Se elimina el BOTÓN de Confirmar Pago.
         });
 
         // Calcular totales para todas las ventas filtradas, no solo la página actual para una visualización precisa
@@ -949,28 +1011,35 @@ document.addEventListener('DOMContentLoaded', async () => {
         renderPaginationControls(totalPages, page);
     }
 
+    // NOTA: Se elimina la función `confirmPayment`.
+
+
     // Event listeners for Listado de Boletas date filters
     if (listSalesStartDateFilter) {
         listSalesStartDateFilter.addEventListener('change', () => {
             currentPage = 1;
-            renderSalesTable(filterSellerInput.value, currentPage, itemsPerPage, listSalesStartDateFilter.value, listSalesEndDateFilter.value);
+            renderSalesTable(filterSellerInput.value, currentPage, itemsPerPage, listSalesStartDateFilter.value, listSalesEndDateFilter.value); // Se elimina el argumento `paymentStatusFilter.value`
         });
     }
     if (listSalesEndDateFilter) {
         listSalesEndDateFilter.addEventListener('change', () => {
             currentPage = 1;
-            renderSalesTable(filterSellerInput.value, currentPage, itemsPerPage, listSalesStartDateFilter.value, listSalesEndDateFilter.value);
+            renderSalesTable(filterSellerInput.value, currentPage, itemsPerPage, listSalesStartDateFilter.value, listSalesEndDateFilter.value); // Se elimina el argumento `paymentStatusFilter.value`
         });
     }
     if (showAllListSalesBtn) {
         showAllListSalesBtn.addEventListener('click', () => {
             if (listSalesStartDateFilter) listSalesStartDateFilter.value = '';
             if (listSalesEndDateFilter) listSalesEndDateFilter.value = '';
+            // NOTA: Se elimina el reinicio del filtro de estado de pago.
             currentPage = 1;
-            renderSalesTable(filterSellerInput.value, currentPage, itemsPerPage, '', '');
+            renderSalesTable(filterSellerInput.value, currentPage, itemsPerPage, '', ''); // Se elimina el argumento 'all'
             showToast('Mostrando todas las boletas en el listado.');
         });
     }
+
+    // NOTA: Se elimina el Event listener para el filtro de estado de pago.
+    // if (paymentStatusFilter) { ... }
 
     function renderPaginationControls(totalPages, currentPage) {
         if (!paginationControls) {
@@ -990,7 +1059,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         // Ajustar startPage si endPage alcanza totalPages pero la ventana no está completa
         if (endPage === totalPages) {
-            startPage = Math.max(1, totalPages - maxPageButtons + 1);
+            startPage = Math.max(1, totalPages - maxPageButtons + 1); // Corrected here: Math.Max -> Math.max
         }
 
         // Botón Anterior
@@ -1001,7 +1070,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         prevButton.addEventListener('click', () => {
             if (currentPage > 1) {
                 currentPage--;
-                renderSalesTable(filterSellerInput.value, currentPage, itemsPerPage, listSalesStartDateFilter.value, listSalesEndDateFilter.value);
+                renderSalesTable(filterSellerInput.value, currentPage, itemsPerPage, listSalesStartDateFilter.value, listSalesEndDateFilter.value); // Se elimina el argumento `paymentStatusFilter.value`
             }
         });
         paginationControls.appendChild(prevButton);
@@ -1013,7 +1082,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             firstPageButton.classList.add('btn', 'secondary', 'px-3', 'py-1', 'rounded-md', 'hover:bg-gray-200');
             firstPageButton.addEventListener('click', () => {
                 currentPage = 1;
-                renderSalesTable(filterSellerInput.value, currentPage, itemsPerPage, listSalesStartDateFilter.value, listSalesEndDateFilter.value);
+                renderSalesTable(filterSellerInput.value, currentPage, itemsPerPage, listSalesStartDateFilter.value, listSalesEndDateFilter.value); // Se elimina el argumento `paymentStatusFilter.value`
             });
             paginationControls.appendChild(firstPageButton);
 
@@ -1037,7 +1106,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
             pageButton.addEventListener('click', () => {
                 currentPage = i;
-                renderSalesTable(filterSellerInput.value, currentPage, itemsPerPage, listSalesStartDateFilter.value, listSalesEndDateFilter.value);
+                renderSalesTable(filterSellerInput.value, currentPage, itemsPerPage, listSalesStartDateFilter.value, listSalesEndDateFilter.value); // Se elimina el argumento `paymentStatusFilter.value`
             });
             paginationControls.appendChild(pageButton);
         }
@@ -1055,7 +1124,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             lastPageButton.classList.add('btn', 'secondary', 'px-3', 'py-1', 'rounded-md', 'hover:bg-gray-200');
             lastPageButton.addEventListener('click', () => {
                 currentPage = totalPages;
-                renderSalesTable(filterSellerInput.value, currentPage, itemsPerPage, listSalesStartDateFilter.value, listSalesEndDateFilter.value);
+                renderSalesTable(filterSellerInput.value, currentPage, itemsPerPage, listSalesStartDateFilter.value, listSalesEndDateFilter.value); // Se elimina el argumento `paymentStatusFilter.value`
             });
             paginationControls.appendChild(lastPageButton);
         }
@@ -1068,7 +1137,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         nextButton.addEventListener('click', () => {
             if (currentPage < totalPages) {
                 currentPage++;
-                renderSalesTable(filterSellerInput.value, currentPage, itemsPerPage, listSalesStartDateFilter.value, listSalesEndDateFilter.value);
+                renderSalesTable(filterSellerInput.value, currentPage, itemsPerPage, listSalesStartDateFilter.value, listSalesEndDateFilter.value); // Se elimina el argumento `paymentStatusFilter.value`
             }
         });
         paginationControls.appendChild(nextButton);
@@ -1088,16 +1157,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         saleAmountInput.value = `${saleToModify.originalAmount} ${saleToModify.currency}`;
         saleCurrencySelect.value = saleToModify.currency;
         paymentMethodSelect.value = saleToModify.paymentMethod;
-        
+
         // Al modificar, se activa la opción de comisión personalizada y se habilita el campo
         if (enableCommissionEditCheckbox) enableCommissionEditCheckbox.checked = true;
         if (commissionRateInput) {
             commissionRateInput.disabled = false;
             commissionRateInput.value = (saleToModify.commissionRate * 10).toFixed(2);
         }
-        
+
         isWholesaleCheckbox.checked = saleToModify.type === 'Mayorista';
-        
         // Mostrar y establecer los campos de pase al modificar una venta mayorista
         if (isWholesaleCheckbox.checked) {
             if (paseAmountGroup) paseAmountGroup.style.display = 'block';
@@ -1110,6 +1178,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (paseAmountInput) paseAmountInput.value = 0;
             if (paseCurrencySelect) paseCurrencySelect.value = 'USD';
         }
+
+        // NOTA: Se elimina la lógica de establecer el estado del checkbox de pago y mensaje al modificar.
 
         addSaleBtn.textContent = 'Actualizar Boleta';
         addSaleBtn.classList.remove('primary');
@@ -1132,8 +1202,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 } else if (totalPages === 0) {
                     currentPage = 1;
                 }
-                renderSalesTable(filterSellerInput.value, currentPage, itemsPerPage, listSalesStartDateFilter.value, listSalesEndDateFilter.value); // Pasa filtros de fecha
-                renderSummaryTable(summaryStartDateFilter.value, summaryEndDateFilter.value, summarySellerFilter.value); 
+                renderSalesTable(filterSellerInput.value, currentPage, itemsPerPage, listSalesStartDateFilter.value, listSalesEndDateFilter.value); // Se elimina el argumento `paymentStatusFilter.value`
+                renderSummaryTable(summaryStartDateFilter.value, summaryEndDateFilter.value, summarySellerFilter.value);
                 renderDetailedSummary(filterDetailedSellerInput.value, detailedStartDateFilter.value, detailedEndDateFilter.value); // Pasa filtros de fecha
                 updateDailySummaryPreview();
                 showToast('Boleta eliminada.');
@@ -1158,6 +1228,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 if (summaryEndDateFilter) summaryEndDateFilter.value = '';
                 if (detailedStartDateFilter) detailedStartDateFilter.value = todayDateString;
                 if (detailedEndDateFilter) detailedEndDateFilter.value = '';
+                // NOTA: Se elimina el reinicio del filtro de estado de pago.
 
                 // Renderiza todas las tablas afectadas con los nuevos filtros
                 renderSalesTable(filterSellerInput.value, currentPage, itemsPerPage, listSalesStartDateFilter.value, listSalesEndDateFilter.value);
@@ -1177,7 +1248,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (filterSellerInput) {
         filterSellerInput.addEventListener('input', (e) => {
             currentPage = 1; // Restablecer a la primera página al cambiar el filtro
-            renderSalesTable(e.target.value, currentPage, itemsPerPage, listSalesStartDateFilter.value, listSalesEndDateFilter.value); // Pasa filtros de fecha
+            renderSalesTable(e.target.value, currentPage, itemsPerPage, listSalesStartDateFilter.value, listSalesEndDateFilter.value); // Se elimina el argumento `paymentStatusFilter.value`
         });
     } else {
         console.error('Error: filterSellerInput es null.');
@@ -1187,7 +1258,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         resetFilterBtn.addEventListener('click', () => {
             if (filterSellerInput) filterSellerInput.value = '';
             currentPage = 1; // Restablecer a la primera página al restablecer el filtro
-            renderSalesTable('', currentPage, itemsPerPage, listSalesStartDateFilter.value, listSalesEndDateFilter.value); // Pasa filtros de fecha
+            renderSalesTable('', currentPage, itemsPerPage, listSalesStartDateFilter.value, listSalesEndDateFilter.value); // Se elimina el argumento `paymentStatusFilter.value`
         });
     } else {
         console.error('Error: resetFilterBtn es null.');
@@ -1200,9 +1271,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             return;
         }
         summaryTableBody.innerHTML = '';
-        
+
         const summary = {};
-        
+
         const filteredSales = sales.filter(sale => {
             const saleDate = new Date(sale.date);
             const start = startDate ? new Date(startDate) : null;
@@ -1229,8 +1300,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
         });
 
-        let globalTotalDepositCommissions = 0; 
+        let globalTotalDepositCommissions = 0;
         let globalTotalGrossCommissions = 0;
+        // Objeto para almacenar los totales de caja en efectivo por moneda original
+        let cashTotals = { ARS: 0, USD: 0, PYG: 0, BRL: 0 }; 
 
         filteredSales.forEach(sale => {
             const sellerName = sale.seller || 'Unknown';
@@ -1240,11 +1313,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                     totalCommissionsArs: 0,
                     totalDepositCommissionsArs: 0,
                     totalGrossCommissionsArs: 0,
-                    totalOriginalUsd: 0, 
+                    totalOriginalUsd: 0,
                     totalOriginalPyg: 0,
                     totalOriginalBrl: 0,
                     totalOriginalArs: 0,
-                    paymentMethodsByCurrency: {} 
+                    paymentMethodsByCurrency: {}
                 };
                 // Inicializar paymentMethodsByCurrency del vendedor para todas las combinaciones
                 ALL_PAYMENT_METHODS.forEach(pm => {
@@ -1254,10 +1327,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                     });
                 });
             }
-            summary[sellerName].totalSalesArs += sale.netAmountArs;
-            summary[sellerName].totalCommissionsArs += sale.commissionArs;
+            summary[sellerName].totalSalesArs += sale.netAmountArs; // Venta Neta (sin pase)
+            summary[sellerName].totalCommissionsArs += sale.commissionArs; // Comisión Neta (sin pase)
             summary[sellerName].totalDepositCommissionsArs += sale.commissionDepositArs;
-            summary[sellerName].totalGrossCommissionsArs += sale.grossCommissionArs;
+            summary[sellerName].totalGrossCommissionsArs += sale.grossCommissionArs; // Comisión Bruta (sin pase)
 
             if (sale.currency === 'USD') {
                 summary[sellerName].totalOriginalUsd += sale.originalAmount;
@@ -1273,9 +1346,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                 globalTotalsByCurrency['ARS'] += sale.originalAmount;
             }
 
-            const paymentMethodKey = sale.paymentMethod || 'Otros';
-            const currencyKey = sale.currency || 'ARS'; 
-            
+            const paymentMethodKey = (sale.paymentMethod || '').trim().toLowerCase(); // Normalizar para la clave
+            const currencyKey = sale.currency || 'ARS';
+
             // Asegurarse de que los objetos anidados existan para los totales específicos del vendedor antes de sumar
             if (!summary[sellerName].paymentMethodsByCurrency[paymentMethodKey]) {
                 summary[sellerName].paymentMethodsByCurrency[paymentMethodKey] = {};
@@ -1283,6 +1356,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (summary[sellerName].paymentMethodsByCurrency[paymentMethodKey][currencyKey] === undefined) {
                 summary[sellerName].paymentMethodsByCurrency[paymentMethodKey][currencyKey] = 0;
             }
+            // Aquí se suma netAmount (monto en su moneda original después del pase) para el desglose por método/moneda
             summary[sellerName].paymentMethodsByCurrency[paymentMethodKey][currencyKey] += sale.netAmount;
 
             // Asegurarse de que los objetos anidados existan para los totales globales antes de sumar
@@ -1292,10 +1366,16 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (globalTotalsByPaymentMethodAndCurrency[paymentMethodKey][currencyKey] === undefined) {
                 globalTotalsByPaymentMethodAndCurrency[paymentMethodKey][currencyKey] = 0;
             }
+            // Aquí se suma netAmount (monto en su moneda original después del pase) para el desglose global por método/moneda
             globalTotalsByPaymentMethodAndCurrency[paymentMethodKey][currencyKey] += sale.netAmount;
 
             globalTotalDepositCommissions += sale.commissionDepositArs;
             globalTotalGrossCommissions += sale.grossCommissionArs;
+
+            // MODIFICACIÓN CLAVE AQUÍ: Suma al total consolidado de caja en su MONEDA ORIGINAL (incluyendo pase) si es 'Efectivo'
+            if (paymentMethodKey === 'efectivo') {
+                cashTotals[sale.currency] += sale.originalAmount;
+            }
         });
 
         const sortedSellers = Object.keys(summary).sort();
@@ -1314,13 +1394,15 @@ document.addEventListener('DOMContentLoaded', async () => {
             <th>TOTAL ARS SIN %</th>
         `;
 
+        // Modificar DISPLAY_METHOD_CURRENCY_COMBINATIONS para usar claves normalizadas en los encabezados
         DISPLAY_METHOD_CURRENCY_COMBINATIONS.forEach(combo => {
-            headerHtml += `<th>${combo.method} (${combo.currency})</th>`;
+            headerHtml += `<th>${(combo.method).toLowerCase()} (${combo.currency})</th>`; // Convertir a minúsculas aquí también
         });
+
 
         let currentThead = summaryTable.querySelector('thead');
         let headerRow = summaryTable.querySelector('thead tr');
-        
+
         if (!currentThead) {
             currentThead = document.createElement('thead');
             summaryTable.prepend(currentThead); // Anteponer thead si no existe
@@ -1333,7 +1415,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         if (sortedSellers.length === 0) {
             const row = summaryTableBody.insertRow();
-            row.innerHTML = `<td colspan="${headerRow.children.length}" style="text-align: center;">No hay datos de vendedores para mostrar con los filtros aplicados.</td>`; 
+            row.innerHTML = `<td colspan="${headerRow.children.length}" style="text-align: center;">No hay datos de vendedores para mostrar con los filtros aplicados.</td>`;
+            // También limpia y oculta los totales de caja si no hay ventas
+            const cashTotalsRow = summaryTableBody.insertRow();
+            cashTotalsRow.id = 'cashTotalsRow'; // Añade un ID para poder manipularla
+            cashTotalsRow.innerHTML = `<td colspan="${headerRow.children.length}" class="font-bold text-lg text-center text-gray-600"></td>`;
             return;
         }
 
@@ -1344,39 +1430,62 @@ document.addEventListener('DOMContentLoaded', async () => {
             row.insertCell().textContent = formatCurrency(summary[seller].totalGrossCommissionsArs, 'ARS');
             row.insertCell().textContent = formatCurrency(summary[seller].totalCommissionsArs, 'ARS');
             row.insertCell().textContent = formatCurrency(summary[seller].totalDepositCommissionsArs, 'ARS');
-            
+
             row.insertCell().textContent = formatCurrency(summary[seller].totalOriginalUsd, 'USD');
-            row.insertCell().textContent = formatCurrency(summary[seller].totalOriginalPyg, 'PYG'); 
+            row.insertCell().textContent = formatCurrency(summary[seller].totalOriginalPyg, 'PYG');
             row.insertCell().textContent = formatCurrency(summary[seller].totalOriginalBrl, 'BRL');
             row.insertCell().textContent = formatCurrency(summary[seller].totalOriginalArs, 'ARS');
 
             DISPLAY_METHOD_CURRENCY_COMBINATIONS.forEach(combo => {
-                const amount = (summary[seller].paymentMethodsByCurrency[combo.method] && summary[seller].paymentMethodsByCurrency[combo.method][combo.currency] !== undefined)
-                    ? summary[seller].paymentMethodsByCurrency[combo.method][combo.currency]
+                const normalizedComboMethod = (combo.method || '').trim().toLowerCase();
+                const amount = (summary[seller].paymentMethodsByCurrency[normalizedComboMethod] && summary[seller].paymentMethodsByCurrency[normalizedComboMethod][combo.currency] !== undefined)
+                    ? summary[seller].paymentMethodsByCurrency[normalizedComboMethod][combo.currency]
                     : 0;
                 row.insertCell().textContent = formatCurrency(amount, combo.currency);
             });
         });
 
         const totalRow = summaryTableBody.insertRow();
-        totalRow.classList.add('totals-row');
-        totalRow.insertCell().textContent = 'TOTAL GENERAL'; 
-        totalRow.insertCell().textContent = formatCurrency(Object.values(summary).reduce((acc, curr) => acc + curr.totalSalesArs, 0), 'ARS');
+        totalRow.classList.add('totals-row', 'font-bold', 'bg-gray-100'); // Añadir estilos para resaltar
+        totalRow.insertCell().textContent = 'TOTAL GENERAL';
+        totalRow.insertCell().textContent = formatCurrency(Object.values(summary).reduce((acc, curr) => Number(acc) + Number(curr.totalSalesArs), 0), 'ARS');
         totalRow.insertCell().textContent = formatCurrency(globalTotalGrossCommissions, 'ARS');
-        totalRow.insertCell().textContent = formatCurrency(Object.values(summary).reduce((acc, curr) => acc + curr.totalCommissionsArs, 0), 'ARS');
+        totalRow.insertCell().textContent = formatCurrency(Object.values(summary).reduce((acc, curr) => Number(acc) + Number(curr.totalCommissionsArs), 0), 'ARS');
         totalRow.insertCell().textContent = formatCurrency(globalTotalDepositCommissions, 'ARS');
-        
-        totalRow.insertCell().textContent = formatCurrency(globalTotalsByCurrency['USD'], 'USD');
-        totalRow.insertCell().textContent = formatCurrency(globalTotalsByCurrency['PYG'], 'PYG'); 
-        totalRow.insertCell().textContent = formatCurrency(globalTotalsByCurrency['BRL'], 'BRL');
-        totalRow.insertCell().textContent = formatCurrency(globalTotalsByCurrency['ARS'], 'ARS');
+
+        // Modificación: Añadir el nombre de la moneda a los totales generales
+        totalRow.insertCell().textContent = `USD: ${formatCurrency(globalTotalsByCurrency['USD'], 'USD')}`;
+        totalRow.insertCell().textContent = `PYG: ${formatCurrency(globalTotalsByCurrency['PYG'], 'PYG')}`;
+        totalRow.insertCell().textContent = `BRL: ${formatCurrency(globalTotalsByCurrency['BRL'], 'BRL')}`;
+        totalRow.insertCell().textContent = `ARS: ${formatCurrency(globalTotalsByCurrency['ARS'], 'ARS')}`;
 
         DISPLAY_METHOD_CURRENCY_COMBINATIONS.forEach(combo => {
-            const amount = (globalTotalsByPaymentMethodAndCurrency[combo.method] && globalTotalsByPaymentMethodAndCurrency[combo.method][combo.currency] !== undefined)
-                ? globalTotalsByPaymentMethodAndCurrency[combo.method][combo.currency]
+            const normalizedComboMethod = (combo.method || '').trim().toLowerCase(); // Normalizar para la búsqueda
+            const amount = (globalTotalsByPaymentMethodAndCurrency[normalizedComboMethod] && globalTotalsByPaymentMethodAndCurrency[normalizedComboMethod][combo.currency] !== undefined)
+                ? globalTotalsByPaymentMethodAndCurrency[normalizedComboMethod][combo.currency]
                 : 0;
             totalRow.insertCell().textContent = formatCurrency(amount, combo.currency);
         });
+
+        // --- FILA PARA RESUMEN DE CAJA (EFECTIVO) ---
+        const cashTotalsRow = summaryTableBody.insertRow();
+        cashTotalsRow.id = 'cashTotalsRow'; // Añade un ID para poder manipularla
+        cashTotalsRow.classList.add('font-bold', 'bg-green-100', 'text-green-800', 'text-xl'); // Estilos para resaltar
+
+        // Primera celda: Muestra el texto "TOTAL CAJA (EFECTIVO):"
+        cashTotalsRow.insertCell().outerHTML = `<td colspan="5" class="text-right pr-4 font-extrabold text-2xl text-green-900">TOTAL CAJA (EFECTIVO): </td>`;
+
+        // Suma de los totales de efectivo por moneda (incluyendo pase)
+        cashTotalsRow.insertCell().outerHTML = `<td class="text-center font-bold">USD: ${formatCurrency(cashTotals['USD'], 'USD')}</td>`; // Columna USD
+        cashTotalsRow.insertCell().outerHTML = `<td class="text-center font-bold">PYG: ${formatCurrency(cashTotals['PYG'], 'PYG')}</td>`; // Columna PYG
+        cashTotalsRow.insertCell().outerHTML = `<td class="text-center font-bold">BRL: ${formatCurrency(cashTotals['BRL'], 'BRL')}</td>`; // Columna BRL
+        cashTotalsRow.insertCell().outerHTML = `<td class="text-center font-bold">ARS: ${formatCurrency(cashTotals['ARS'], 'ARS')}</td>`; // Columna ARS
+
+        // Rellenar las celdas restantes con espacios vacíos o guiones
+        const remainingCellsForCashRow = headerRow.children.length - (5 + 4); // 5 de colspan + 4 de las monedas
+        for (let i = 0; i < remainingCellsForCashRow; i++) {
+            cashTotalsRow.insertCell().textContent = ''; // Celda vacía
+        }
     }
 
     // --- Resumen Detallado por Moneda ---
@@ -1415,14 +1524,15 @@ document.addEventListener('DOMContentLoaded', async () => {
             const paseCurrencyStored = sale.paseCurrency || 'USD'; // Recuperar moneda de pase almacenada
             const netAmount = parseFloat(sale.netAmount) || 0;
             const netAmountArs = parseFloat(sale.netAmountArs) || 0;
-            
-            const commissionRate = parseFloat(sale.commissionRate) || 0.03; 
+
+            const commissionRate = parseFloat(sale.commissionRate) || 0.03;
             const grossCommissionArs = parseFloat(sale.grossCommissionArs) || 0;
-            const commissionDepositRate = parseFloat(sale.commissionDepositRate) || 0.06; 
+            const commissionDepositRate = parseFloat(sale.commissionDepositRate) || 0.06;
             const commissionDepositArs = parseFloat(sale.commissionDepositArs) || 0;
             const netCommissionArs = parseFloat(sale.commissionArs) || 0;
             const paymentMethod = sale.paymentMethod || 'Efectivo';
             const type = sale.type || 'Minorista';
+            // isPaymentConfirmed ha sido eliminado
 
             if (!detailedSummary[sellerName]) {
                 detailedSummary[sellerName] = {};
@@ -1438,7 +1548,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                     'BRL': { originalSum: 0, paseSum: 0, netSum: 0, netInArsSum: 0, grossCommissionArsSum: 0, commissionDepositSum: 0, netCommissionSum: 0, individualSales: [] }
                 };
             }
-            
             detailedSummary[sellerName][saleDate][type][saleCurrency].originalSum += originalAmount;
             detailedSummary[sellerName][saleDate][type][saleCurrency].paseSum += paseTotal;
             detailedSummary[sellerName][saleDate][type][saleCurrency].netSum += netAmount; // Usar netAmount
@@ -1486,7 +1595,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         const typeDiv = document.createElement('div');
                         typeDiv.classList.add('sale-type-block', 'border-b', 'border-gray-200', 'pb-4', 'mb-4', 'last:border-b-0', 'last:pb-0', 'last:mb-0'); // Añadir clases para estilos
                         typeDiv.innerHTML = `<h5 class="text-lg font-bold text-gray-700 mb-2">Tipo: ${type}</h5>`;
-                        
+
                         const currencyDetailList = document.createElement('ul');
                         currencyDetailList.classList.add('list-disc', 'pl-5', 'space-y-2'); // Añadir clases para estilos
 
@@ -1513,11 +1622,12 @@ document.addEventListener('DOMContentLoaded', async () => {
                                         &nbsp;&nbsp;Comisión Bruta: <span class="text-sm">${(parseFloat(individualSale.commissionRate) * 10).toFixed(2)}%</span> (<span class="font-semibold">${formatCurrency(individualSale.grossCommissionArs, 'ARS')}</span>)<br>
                                         &nbsp;&nbsp;Comisión Depósito: <span class="text-sm">${(parseFloat(individualSale.commissionDepositRate) * 100).toFixed(2)}%</span> (<span class="font-semibold">${formatCurrency(individualSale.commissionDepositArs, 'ARS')}</span>)<br>
                                         &nbsp;&nbsp;Comisión Neta: <span class="font-bold text-green-700">${formatCurrency(individualSale.commissionArs, 'ARS')}</span>
+                                        <!-- isPaymentConfirmed ha sido eliminado del resumen detallado -->
                                     </li>
                                 `;
                             });
                         }
-                        
+
                         typeDiv.appendChild(currencyDetailList);
 
                         let specificCurrencyTotalsHtml = '';
@@ -1617,8 +1727,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             return;
         }
 
-        const tempTable = document.createElement('table'); 
-        tempTable.style.display = 'none'; 
+        const tempTable = document.createElement('table');
+        tempTable.style.display = 'none';
         tempTable.id = 'exportTableDetailed';
 
         const thead = document.createElement('thead');
@@ -1633,6 +1743,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             "Tasa Comisión Bruta (%)", "Comisión Bruta ($)",
             "Tasa Comisión Depósito (%)", "Comisión Depósito ($)",
             "Comisión Neta ($)", "Método de Pago"
+            // "Estado Pago" ha sido eliminado
         ];
         headers.forEach(headerText => {
             const th = document.createElement('th');
@@ -1655,19 +1766,20 @@ document.addEventListener('DOMContentLoaded', async () => {
             row.insertCell().textContent = (sale.date === '' || sale.date === 0 || isNaN(new Date(sale.date))) ? '' : sale.date;
             row.insertCell().textContent = sale.type;
             row.insertCell().textContent = sale.currency;
-            
+
             row.insertCell().textContent = formatNumberForExcel(sale.originalAmount, sale.currency === 'PYG' ? 0 : 2);
             row.insertCell().textContent = formatNumberForExcel(sale.paseAmount, sale.paseCurrency === 'PYG' ? 0 : 2);
             row.insertCell().textContent = sale.paseCurrency;
-            row.insertCell().textContent = formatNumberForExcel(sale.netAmountArs, 2); 
+            row.insertCell().textContent = formatNumberForExcel(sale.netAmountArs, 2);
 
-            row.insertCell().textContent = formatNumberForExcel(sale.commissionRate * 10, 2); 
+            row.insertCell().textContent = formatNumberForExcel(sale.commissionRate * 10, 2);
             row.insertCell().textContent = formatNumberForExcel(sale.grossCommissionArs, 2);
 
-            row.insertCell().textContent = formatNumberForExcel(sale.commissionDepositRate * 100, 2); 
+            row.insertCell().textContent = formatNumberForExcel(sale.commissionDepositRate * 100, 2);
             row.insertCell().textContent = formatNumberForExcel(sale.commissionDepositArs, 2);
             row.insertCell().textContent = formatNumberForExcel(sale.commissionArs, 2);
             row.insertCell().textContent = sale.paymentMethod;
+            // row.insertCell().textContent = sale.isPaymentConfirmed ? 'Confirmado' : 'Pendiente'; ha sido eliminado
         });
 
         document.body.appendChild(tempTable);
@@ -1691,7 +1803,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             showToast(`Error exportando resumen detallado a Excel: ${e.message}`, 'error');
             console.error('Error durante la exportación a Excel del resumen detallado:', e);
         } finally {
-            document.body.removeChild(tempTable); 
+            document.body.removeChild(tempTable);
         }
     }
 
@@ -1699,7 +1811,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Esta función maneja específicamente la exportación para la tabla de resumen general
     function exportSummaryTableToExcel() {
         const tempTable = document.createElement('table');
-        tempTable.style.display = 'none'; 
+        tempTable.style.display = 'none';
         tempTable.id = 'exportTableGeneral';
         const thead = document.createElement('thead');
         const tbody = document.createElement('tbody');
@@ -1707,7 +1819,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         tempTable.appendChild(tbody);
 
         const summary = {};
-        
+
         const startDate = summaryStartDateFilter.value;
         const endDate = summaryEndDateFilter.value;
         const seller = summarySellerFilter.value.trim();
@@ -1739,6 +1851,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         let globalTotalDepositCommissions = 0;
         let globalTotalGrossCommissions = 0;
+        // Objeto para almacenar los totales de caja en efectivo por moneda original para la exportación
+        let cashTotals = { ARS: 0, USD: 0, PYG: 0, BRL: 0 }; 
 
         salesToProcess.forEach(sale => {
             const sellerName = sale.seller || 'Unknown';
@@ -1752,7 +1866,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     totalOriginalPyg: 0,
                     totalOriginalBrl: 0,
                     totalOriginalArs: 0,
-                    paymentMethodsByCurrency: {} 
+                    paymentMethodsByCurrency: {}
                 };
                 ALL_PAYMENT_METHODS.forEach(pm => {
                     summary[sellerName].paymentMethodsByCurrency[pm] = {};
@@ -1780,26 +1894,23 @@ document.addEventListener('DOMContentLoaded', async () => {
                 globalTotalsByCurrency['ARS'] += sale.originalAmount;
             }
 
-            const paymentMethodKey = sale.paymentMethod || 'Otros';
+            const paymentMethodKey = (sale.paymentMethod || '').trim().toLowerCase(); // Normalizar para la clave
             const currencyKey = sale.currency || 'ARS';
-            
+
             if (!summary[sellerName].paymentMethodsByCurrency[paymentMethodKey]) {
                 summary[sellerName].paymentMethodsByCurrency[paymentMethodKey] = {};
             }
             if (summary[sellerName].paymentMethodsByCurrency[paymentMethodKey][currencyKey] === undefined) {
                 summary[sellerName].paymentMethodsByCurrency[paymentMethodKey][currencyKey] = 0;
             }
-            summary[sellerName].paymentMethodsByCurrency[paymentMethodKey][currencyKey] += sale.netAmount;
-
-            if (!globalTotalsByPaymentMethodAndCurrency[paymentMethodKey]) {
-                globalTotalsByPaymentMethodAndCurrency[paymentMethodKey] = {};
-            }
-            if (globalTotalsByPaymentMethodAndCurrency[paymentMethodKey][currencyKey] === undefined) {
-                globalTotalsByPaymentMethodAndCurrency[paymentMethodKey][currencyKey] = 0;
-            }
             globalTotalsByPaymentMethodAndCurrency[paymentMethodKey][currencyKey] += sale.netAmount;
             globalTotalDepositCommissions += sale.commissionDepositArs;
             globalTotalGrossCommissions += sale.grossCommissionArs;
+
+            // MODIFICACIÓN CLAVE AQUÍ PARA EXPORTACIÓN: Suma al total consolidado de caja en su MONEDA ORIGINAL (incluyendo pase) si es 'Efectivo'
+            if (paymentMethodKey === 'efectivo') {
+                cashTotals[sale.currency] += sale.originalAmount;
+            }
         });
 
         const sortedSellers = Object.keys(summary).sort();
@@ -1819,7 +1930,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         `;
 
         DISPLAY_METHOD_CURRENCY_COMBINATIONS.forEach(combo => {
-            headerHtml += `<th>${combo.method} (${combo.currency})</th>`;
+            headerHtml += `<th>${(combo.method).toLowerCase()} (${combo.currency})</th>`; // Convertir a minúsculas aquí también
         });
 
         const headerRow = thead.insertRow();
@@ -1833,46 +1944,64 @@ document.addEventListener('DOMContentLoaded', async () => {
         sortedSellers.forEach(seller => {
             const row = tbody.insertRow();
             row.insertCell().textContent = seller;
-            
+
             row.insertCell().textContent = formatNumberForExcel(summary[seller].totalSalesArs, 2);
             row.insertCell().textContent = formatNumberForExcel(summary[seller].totalGrossCommissionsArs, 2);
             row.insertCell().textContent = formatNumberForExcel(summary[seller].totalCommissionsArs, 2);
             row.insertCell().textContent = formatNumberForExcel(summary[seller].totalDepositCommissionsArs, 2);
-            
+
             row.insertCell().textContent = formatNumberForExcel(summary[seller].totalOriginalUsd, 2);
             row.insertCell().textContent = formatNumberForExcel(summary[seller].totalOriginalPyg, 0);
             row.insertCell().textContent = formatNumberForExcel(summary[seller].totalOriginalBrl, 2);
             row.insertCell().textContent = formatNumberForExcel(summary[seller].totalOriginalArs, 2);
 
             DISPLAY_METHOD_CURRENCY_COMBINATIONS.forEach(combo => {
-                const amount = (summary[seller].paymentMethodsByCurrency[combo.method] && summary[seller].paymentMethodsByCurrency[combo.method][combo.currency] !== undefined)
-                    ? summary[seller].paymentMethodsByCurrency[combo.method][combo.currency]
+                const normalizedComboMethod = (combo.method || '').trim().toLowerCase();
+                const amount = (summary[seller].paymentMethodsByCurrency[normalizedComboMethod] && summary[seller].paymentMethodsByCurrency[normalizedComboMethod][combo.currency] !== undefined)
+                    ? summary[seller].paymentMethodsByCurrency[normalizedComboMethod][combo.currency]
                     : 0;
                 row.insertCell().textContent = formatNumberForExcel(amount, combo.currency === 'PYG' ? 0 : 2);
             });
         });
 
         const totalRow = tbody.insertRow();
-        totalRow.insertCell().textContent = 'TOTAL GENERAL'; 
+        totalRow.insertCell().textContent = 'TOTAL GENERAL';
 
-        totalRow.insertCell().textContent = formatNumberForExcel(Object.values(summary).reduce((acc, curr) => acc + curr.totalSalesArs, 0), 2);
+        totalRow.insertCell().textContent = formatNumberForExcel(Object.values(summary).reduce((acc, curr) => Number(acc) + Number(curr.totalSalesArs), 0), 2);
         totalRow.insertCell().textContent = formatNumberForExcel(globalTotalGrossCommissions, 2);
-        totalRow.insertCell().textContent = formatNumberForExcel(Object.values(summary).reduce((acc, curr) => acc + curr.totalCommissionsArs, 0), 2);
+        totalRow.insertCell().textContent = formatNumberForExcel(Object.values(summary).reduce((acc, curr) => Number(acc) + Number(curr.totalCommissionsArs), 0), 2);
         totalRow.insertCell().textContent = formatNumberForExcel(globalTotalDepositCommissions, 2);
-        
-        totalRow.insertCell().textContent = formatNumberForExcel(globalTotalsByCurrency['USD'], 2);
-        totalRow.insertCell().textContent = formatNumberForExcel(globalTotalsByCurrency['PYG'], 0);
-        totalRow.insertCell().textContent = formatNumberForExcel(globalTotalsByCurrency['BRL'], 2);
-        totalRow.insertCell().textContent = formatNumberForExcel(globalTotalsByCurrency['ARS'], 2);
+
+        // Modificación para la exportación a Excel: Añadir el nombre de la moneda
+        totalRow.insertCell().textContent = `USD: ${formatNumberForExcel(globalTotalsByCurrency['USD'], 2)}`;
+        totalRow.insertCell().textContent = `PYG: ${formatNumberForExcel(globalTotalsByCurrency['PYG'], 0)}`;
+        totalRow.insertCell().textContent = `BRL: ${formatNumberForExcel(globalTotalsByCurrency['BRL'], 2)}`;
+        totalRow.insertCell().textContent = `ARS: ${formatNumberForExcel(globalTotalsByCurrency['ARS'], 2)}`;
 
         DISPLAY_METHOD_CURRENCY_COMBINATIONS.forEach(combo => {
-            const amount = (globalTotalsByPaymentMethodAndCurrency[combo.method] && globalTotalsByPaymentMethodAndCurrency[combo.method][combo.currency] !== undefined)
-                ? globalTotalsByPaymentMethodAndCurrency[combo.method][combo.currency]
+            const normalizedComboMethod = (combo.method || '').trim().toLowerCase(); // Normalizar para la búsqueda
+            const amount = (globalTotalsByPaymentMethodAndCurrency[normalizedComboMethod] && globalTotalsByPaymentMethodAndCurrency[normalizedComboMethod][combo.currency] !== undefined)
+                ? globalTotalsByPaymentMethodAndCurrency[normalizedComboMethod][combo.currency]
                 : 0;
-            totalRow.insertCell().textContent = formatNumberForExcel(amount, combo.currency === 'PYG' ? 0 : 2);
+            row.insertCell().textContent = formatNumberForExcel(amount, combo.currency === 'PYG' ? 0 : 2);
         });
 
-        document.body.appendChild(tempTable); 
+        // Fila de TOTAL CAJA (EFECTIVO) para la exportación
+        const cashTotalsExportRow = tbody.insertRow();
+        // Se muestra el total consolidado de caja en ARS directamente en la primera celda.
+        cashTotalsExportRow.insertCell().outerHTML = `<th colspan="5" style="text-align: right;">TOTAL CAJA (EFECTIVO):</th>`;
+        cashTotalsExportRow.insertCell().outerHTML = `<th style="text-align: center;">USD: ${formatNumberForExcel(cashTotals['USD'] || 0, 2)}</th>`;
+        cashTotalsExportRow.insertCell().outerHTML = `<th style="text-align: center;">PYG: ${formatNumberForExcel(cashTotals['PYG'] || 0, 0)}</th>`;
+        cashTotalsExportRow.insertCell().outerHTML = `<th style="text-align: center;">BRL: ${formatNumberForExcel(cashTotals['BRL'] || 0, 2)}</th>`;
+        cashTotalsExportRow.insertCell().outerHTML = `<th style="text-align: center;">ARS: ${formatNumberForExcel(cashTotals['ARS'] || 0, 2)}</th>`;
+
+        // Rellenar las celdas restantes con espacios vacíos para la exportación
+        const remainingCellsForExportCashRow = headerRow.children.length - (5 + 4);
+        for (let i = 0; i < remainingCellsForExportCashRow; i++) {
+            cashTotalsExportRow.insertCell().textContent = '';
+        }
+
+        document.body.appendChild(tempTable);
 
         try {
             if (typeof Table2Excel !== 'undefined') {
@@ -1882,7 +2011,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 if (startDate && endDate) filename += `_Desde_${startDate}_Hasta_${endDate}`;
                 else if (startDate) filename += `_Desde_${startDate}`;
                 else if (endDate) filename += `_Hasta_${endDate}`;
-                
+
                 table2excel.export(tempTable, filename);
                 showToast('Resumen general exportado a Excel correctamente.');
             } else {
@@ -1893,7 +2022,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             showToast(`Error exportando resumen general a Excel: ${e.message}`, 'error');
             console.error('Error durante la exportación a Excel del resumen general:', e);
         } finally {
-            document.body.removeChild(tempTable); 
+            document.body.removeChild(tempTable);
         }
     }
 
@@ -1942,7 +2071,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             } else {
                 console.error('Error: sellerNamesDatalist es null.');
             }
-            
+
             if (sellerNamesSummaryDatalist) {
                 sellerNamesSummaryDatalist.innerHTML = '';
             } else {
@@ -2112,7 +2241,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         // Siempre cargar todos los datos de la API para asegurar que estén frescos
-        await loadAllData(); 
+        await loadAllData();
 
         // Renderiza el contenido de la pestaña activa con los filtros correspondientes
         if (tabId === 'listado-boletas') {
@@ -2122,6 +2251,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 itemsPerPage,
                 listSalesStartDateFilter ? listSalesStartDateFilter.value : '',
                 listSalesEndDateFilter ? listSalesEndDateFilter.value : ''
+                // Se elimina el argumento `paymentStatusFilter.value`
             );
         } else if (tabId === 'resumen-vendedor') {
             applySummaryFilters();
@@ -2189,12 +2319,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (enableCommissionEditCheckbox) {
         enableCommissionEditCheckbox.checked = false; // Checkbox desmarcado por defecto
     }
-    
+
     // Ocultar los campos de pase al cargar la página
     if (isWholesaleCheckbox) isWholesaleCheckbox.checked = false;
     if (paseAmountGroup) paseAmountGroup.style.display = 'none';
-    if (paseCurrencyGroup) paseCurrencyGroup.style.display = 'none';
     if (paseAmountInput) paseAmountInput.value = 0;
+    if (paseCurrencyGroup) paseCurrencyGroup.style.display = 'none'; // Oculta el grupo de moneda de pase
     if (paseCurrencySelect) paseCurrencySelect.value = 'USD'; // Valor por defecto
 
     // Inicializa los filtros de fecha para 'Listado de Boletas' y 'Resumen Detallado'
@@ -2204,7 +2334,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (listSalesEndDateFilter) listSalesEndDateFilter.value = '';
     if (detailedStartDateFilter) detailedStartDateFilter.value = '';
     if (detailedEndDateFilter) detailedEndDateFilter.value = '';
+    // NOTA: Se elimina la inicialización del filtro de estado de pago.
 
     await loadAllData(); // Cargar todos los datos iniciales de la API
     showTab('cotizaciones'); // Muestra la primera pestaña al cargar
+
+    // NOTA: Se elimina el dispatchEvent para paymentMethodSelect ya no es necesario.
 });
